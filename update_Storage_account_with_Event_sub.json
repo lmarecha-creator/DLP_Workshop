@@ -1,0 +1,52 @@
+{
+    "$schema": "https://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+    "contentVersion": "1.0.0.0",
+    "parameters": {
+        "storageName": {
+            "type": "Array",
+            "metadata": {
+                "description": "Provide a unique name for the Blob Storage account. (Only storage accounts of kind StorageV2 (general purpose v2) and BlobStorage support event integration.)"
+            }
+        },
+        "eventSubName": {
+            "defaultValue": "subToStorage",
+            "type": "String",
+            "metadata": {
+                "description": "Provide a name for the Event Grid subscription."
+            }
+        },
+        "endpoint": {
+            "type": "String",
+            "metadata": {
+                "description": "Provide the URL for the WebHook to receive events. Create your own endpoint for events."
+            }
+        }
+    },
+    "resources": [
+        {
+            "type": "Microsoft.Storage/storageAccounts/providers/eventSubscriptions",
+            "apiVersion": "2018-01-01",
+            "name": "[concat(parameters('storageName')[copyIndex()], '/Microsoft.EventGrid/', parameters('eventSubName'))]",
+            "properties": {
+                "destination": {
+                    "endpointType": "WebHook",
+                    "properties": {
+                        "endpointUrl": "[parameters('endpoint')]"
+                    }
+                },
+                "filter": {
+                    "subjectBeginsWith": "",
+                    "subjectEndsWith": "",
+                    "isSubjectCaseSensitive": false,
+                    "includedEventTypes": [
+                        "All"
+                    ]
+                }
+            },
+            "copy": {
+                "name": "eventSubscriptionscopy",
+                "count": "[length(parameters('storageName'))]"
+            }
+        }
+    ]
+}
